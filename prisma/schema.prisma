@@ -1,0 +1,305 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  candidate
+  hiring_team
+  admin
+}
+
+enum JobStatus {
+  open
+  paused
+  closed
+}
+
+enum ApplicationStage {
+  applied
+  screened
+  shortlisted
+  rejected
+  interview_pending
+  interview_scheduled
+  interview_completed
+  offer_drafting
+  offer_sent
+  offer_signed
+  onboarded
+}
+
+enum InterviewStatus {
+  queued
+  offered
+  scheduled
+  completed
+  cancelled
+  no_show
+}
+
+enum OfferStatus {
+  draft
+  sent
+  signed
+  declined
+  voided
+}
+
+enum WorkflowState {
+  pending
+  processing
+  succeeded
+  failed
+}
+
+enum IntegrationProvider {
+  openrouter
+  resend
+  google_calendar
+  fireflies
+  docusign
+  slack
+  serper
+}
+
+model Profile {
+  id              String        @id @default(cuid())
+  authUserId      String?       @unique
+  role            UserRole
+  email           String        @unique
+  fullName        String
+  title           String?
+  company         String?
+  location        String?
+  managerName     String?
+  managerGreeting String?
+  startDate       DateTime?
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  applications    Application[]
+}
+
+model JobOpening {
+  id                  String        @id @default(cuid())
+  slug                String        @unique
+  title               String
+  team                String
+  location            String
+  experienceLevel     String
+  remoteLabel         String
+  overview            String
+  responsibilities    String[]
+  requirements        String[]
+  differentiators     String[]
+  compensationBand    String?
+  status              JobStatus     @default(open)
+  displayOrder        Int           @default(0)
+  aiLeverageSummary   String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  applications        Application[]
+}
+
+model Application {
+  id                    String           @id @default(cuid())
+  candidateId           String
+  jobOpeningId          String
+  fullName              String
+  email                 String
+  linkedInUrl           String?
+  portfolioUrl          String?
+  roleSelectionSnapshot String
+  stage                 ApplicationStage @default(applied)
+  stageReason           String?
+  submittedAt           DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  statusHistory         Json?
+  candidate             Profile          @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobOpening            JobOpening       @relation(fields: [jobOpeningId], references: [id], onDelete: Cascade)
+  resumeAsset           ResumeAsset?
+  screeningResult       ScreeningResult?
+  researchProfile       ResearchProfile?
+  interviews            Interview[]
+  offerDrafts           OfferDraft[]
+
+  @@unique([email, jobOpeningId])
+}
+
+model ResumeAsset {
+  id             String      @id @default(cuid())
+  applicationId  String      @unique
+  fileName       String
+  mimeType       String
+  fileSize       Int
+  storagePath    String
+  extractedText  String?
+  extractedLinks String[]
+  createdAt      DateTime    @default(now())
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model ScreeningResult {
+  id               String      @id @default(cuid())
+  applicationId    String      @unique
+  fitScore         Int
+  rationale        String
+  strengths        String[]
+  gaps             String[]
+  skills           String[]
+  yearsExperience  Decimal?    @db.Decimal(4, 1)
+  education        Json?
+  pastEmployers    String[]
+  achievements     String[]
+  thresholdUsed    Int         @default(75)
+  autoShortlisted  Boolean     @default(false)
+  sourceModel      String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  application      Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model ResearchProfile {
+  id                 String      @id @default(cuid())
+  applicationId      String      @unique
+  candidateBrief     String
+  githubSummary      String?
+  linkedInSummary    String?
+  xSummary           String?
+  discrepancyFlags   String[]
+  sources            Json?
+  completeness       String      @default("partial")
+  sourceModel        String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  application        Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Interview {
+  id                 String          @id @default(cuid())
+  applicationId      String
+  interviewerEmail   String
+  interviewerName    String
+  googleEventId      String?         @unique
+  meetingUrl         String?
+  status             InterviewStatus @default(queued)
+  candidateRsvp      String?         @default("needsAction")
+  offeredAt          DateTime?
+  confirmedAt        DateTime?
+  startsAt           DateTime?
+  endsAt             DateTime?
+  notes              String?
+  rescheduleContext  Json?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  application        Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  offerSets          SlotOfferSet[]
+  transcript         TranscriptArtifact?
+}
+
+model SlotOfferSet {
+  id            String        @id @default(cuid())
+  interviewId   String
+  expiresAt     DateTime
+  version       Int           @default(1)
+  status        String        @default("open")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  interview     Interview     @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  slotHolds     SlotHold[]
+}
+
+model SlotHold {
+  id              String       @id @default(cuid())
+  slotOfferSetId  String
+  calendarId      String
+  googleHoldEventId String?
+  startAt         DateTime
+  endAt           DateTime
+  status          String       @default("held")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  slotOfferSet    SlotOfferSet @relation(fields: [slotOfferSetId], references: [id], onDelete: Cascade)
+
+  @@unique([calendarId, startAt])
+}
+
+model TranscriptArtifact {
+  id                String      @id @default(cuid())
+  interviewId       String      @unique
+  provider          String      @default("fireflies")
+  providerMeetingId String?
+  summary           String
+  transcript        String
+  transcriptJson    Json?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  interview         Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
+
+model OfferDraft {
+  id                String      @id @default(cuid())
+  applicationId     String
+  status            OfferStatus @default(draft)
+  jobTitle          String
+  startDate         DateTime
+  baseSalary        Int
+  compensationNotes String?
+  bonus             String?
+  equity            String?
+  managerName       String
+  customTerms       String?
+  markdown          String
+  html              String
+  pdfStoragePath    String?
+  docusignEnvelopeId String?    @unique
+  sentAt            DateTime?
+  signedAt          DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  application       Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model WorkflowJob {
+  id            String        @id @default(cuid())
+  kind          String
+  state         WorkflowState @default(pending)
+  payload       Json
+  attempts      Int           @default(0)
+  runAfter      DateTime      @default(now())
+  lastError     String?
+  idempotencyKey String?      @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model IntegrationEvent {
+  id             String              @id @default(cuid())
+  provider       IntegrationProvider
+  eventType      String
+  externalId     String?
+  status         String
+  payload        Json?
+  dedupeKey      String?             @unique
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+model IntegrationCredential {
+  id            String              @id @default(cuid())
+  provider      IntegrationProvider
+  lookupKey     String
+  accessToken   String?
+  refreshToken  String?
+  metadata      Json?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([provider, lookupKey])
+}
