@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { expireOldHolds, syncRsvpStatuses } from "@/lib/server/scheduling";
+import {
+  expireOldHolds,
+  reconcileScheduledInterviewEvents,
+  sendPendingInterviewNudges,
+  syncRsvpStatuses,
+} from "@/lib/server/scheduling";
+import { syncOutstandingOfferSignatures } from "@/lib/server/offer-signatures";
 
 export async function GET(request: Request) {
   const vercelCronHeader = request.headers.get("x-vercel-cron");
@@ -9,10 +15,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [expired, rsvp] = await Promise.all([expireOldHolds(), syncRsvpStatuses()]);
+  const expired = await expireOldHolds();
+  const calendar = await reconcileScheduledInterviewEvents();
+  const nudges = await sendPendingInterviewNudges();
+  const rsvp = await syncRsvpStatuses();
+  const docusign = await syncOutstandingOfferSignatures();
   return NextResponse.json({
     ok: true,
     expired,
+    calendar,
+    nudges,
     rsvp,
+    docusign,
   });
 }

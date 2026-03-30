@@ -1,100 +1,8 @@
 import { PrismaClient, UserRole } from "@prisma/client";
-import slugify from "slugify";
+
+import { fallbackJobCatalog } from "../src/lib/job-catalog";
 
 const prisma = new PrismaClient();
-
-const jobs = [
-  {
-    title: "AI Product Operator",
-    team: "Product Operations",
-    location: "New York, NY",
-    remoteLabel: "Hybrid",
-    experienceLevel: "Senior / Lead",
-    overview:
-      "Own AI-native internal tooling that compresses operational cycles across recruiting, payroll, and global HR workflows.",
-    responsibilities: [
-      "Design operator-grade AI workflows that remove repetitive recruiting work.",
-      "Ship internal tools that connect LLM reasoning, workflow orchestration, and SaaS integrations.",
-      "Instrument every workflow with audit trails, failure handling, and human review states.",
-      "Partner with recruiting and people teams to improve throughput and quality.",
-    ],
-    requirements: [
-      "6+ years building productized internal tools or ops platforms.",
-      "Strong taste in workflow design and system-level thinking.",
-      "Hands-on experience with LLM APIs, prompts, and evaluation loops.",
-      "Comfort owning integrations, docs, and rapid prototyping end to end.",
-    ],
-    differentiators: [
-      "Direct ownership of high-leverage internal AI systems.",
-      "High-trust environment with fast shipping expectations.",
-      "Meaningful product influence across HR and finance operations.",
-    ],
-    compensationBand: "$170,000 - $215,000",
-    displayOrder: 1,
-    aiLeverageSummary:
-      "Primary role for building AI systems that reduce recruiter and operator workload.",
-  },
-  {
-    title: "Global Payroll Automation Lead",
-    team: "Global Payroll",
-    location: "Remote (US)",
-    remoteLabel: "Remote",
-    experienceLevel: "Senior",
-    overview:
-      "Lead automation across global payroll workflows, exception handling, and operational readiness for international teams.",
-    responsibilities: [
-      "Map payroll failure points and automate high-volume manual tasks.",
-      "Own systems that surface payroll anomalies before deadlines hit.",
-      "Translate policy, compliance, and country logic into practical workflows.",
-      "Partner with engineering to operationalize AI-assisted payroll reviews.",
-    ],
-    requirements: [
-      "Deep payroll operations background across US and international markets.",
-      "Comfort with tooling, spreadsheets, and systems automation.",
-      "Strong process design and escalation judgment.",
-      "Experience documenting controls and exception paths.",
-    ],
-    differentiators: [
-      "High visibility role bridging HR, payroll, and product.",
-      "Opportunity to standardize global payroll at scale.",
-      "Strong mix of systems work and operational ownership.",
-    ],
-    compensationBand: "$145,000 - $185,000",
-    displayOrder: 2,
-    aiLeverageSummary:
-      "Focuses on AI-assisted payroll reviews, anomaly detection, and operations acceleration.",
-  },
-  {
-    title: "Full-Stack Platform Engineer",
-    team: "Platform",
-    location: "San Francisco, CA",
-    remoteLabel: "On-site flexible",
-    experienceLevel: "Senior",
-    overview:
-      "Build the systems, integrations, and internal product surfaces that power Niural's automation stack.",
-    responsibilities: [
-      "Own full-stack delivery across Next.js, APIs, and data services.",
-      "Build resilient integration layers for HR, scheduling, and onboarding tools.",
-      "Ship polished internal UX for dense operational workflows.",
-      "Raise code quality, observability, and developer velocity.",
-    ],
-    requirements: [
-      "Strong TypeScript and React background with backend ownership.",
-      "Comfort with Postgres, queues, and external API design.",
-      "Experience building internal tools or operational platforms.",
-      "A sharp eye for product quality, not just raw implementation.",
-    ],
-    differentiators: [
-      "Wide surface area and fast feedback loops.",
-      "Meaningful ownership across backend and product surfaces.",
-      "Close pairing with teams building AI-enabled systems.",
-    ],
-    compensationBand: "$180,000 - $225,000",
-    displayOrder: 3,
-    aiLeverageSummary:
-      "Supports the platform layer that operationalizes LLMs, workflow jobs, and external integrations.",
-  },
-];
 
 async function main() {
   const admin = await prisma.profile.upsert({
@@ -120,13 +28,30 @@ async function main() {
     },
   });
 
-  for (const job of jobs) {
+  for (const [index, job] of fallbackJobCatalog.entries()) {
+    const payload = {
+      title: job.title,
+      team: job.team,
+      location: job.location,
+      remoteLabel: job.remoteLabel,
+      experienceLevel: job.experienceLevel,
+      overview: job.overview,
+      responsibilities: job.responsibilities,
+      requirements: job.requirements,
+      differentiators: job.differentiators,
+      compensationBand: job.compensationBand,
+      displayOrder: index + 1,
+      aiLeverageSummary: job.aiLeverageSummary || null,
+      status: job.status,
+      createdAt: new Date(job.postedAt),
+    };
+
     await prisma.jobOpening.upsert({
-      where: { slug: slugify(job.title, { lower: true, strict: true }) },
-      update: job,
+      where: { slug: job.slug },
+      update: payload,
       create: {
-        slug: slugify(job.title, { lower: true, strict: true }),
-        ...job,
+        slug: job.slug,
+        ...payload,
       },
     });
   }
@@ -239,7 +164,9 @@ async function main() {
     skipDuplicates: true,
   });
 
-  console.log(`Seeded admin ${admin.email}, hiring ${hiringTeam.email}, and ${openings.length} job openings.`);
+  console.log(
+    `Seeded admin ${admin.email}, hiring ${hiringTeam.email}, and ${openings.length} job openings.`,
+  );
 }
 
 main()

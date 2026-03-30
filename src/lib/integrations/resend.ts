@@ -15,6 +15,11 @@ export async function sendTransactionalEmail(input: {
   subject: string;
   html: string;
   text: string;
+  attachments?: Array<{
+    filename: string;
+    content: string | Buffer;
+    contentType?: string;
+  }>;
 }) {
   const client = getClient();
   if (!client) {
@@ -30,7 +35,16 @@ export async function sendTransactionalEmail(input: {
     subject: input.subject,
     html: input.html,
     text: input.text,
+    attachments: input.attachments?.map((attachment) => ({
+      filename: attachment.filename,
+      content: attachment.content,
+      contentType: attachment.contentType,
+    })),
   });
+
+  if (result.error) {
+    throw new Error(result.error.message || "Resend rejected the email request.");
+  }
 
   return {
     mode: "live" as const,

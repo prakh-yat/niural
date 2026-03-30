@@ -11,9 +11,9 @@ export function PageFrame({
   className?: string;
 }) {
   return (
-    <div className="surface-grid radial-accent min-h-screen">
+    <div className="min-h-screen bg-[#fafafa]">
       <SiteHeader />
-      <main className={cn("mx-auto flex w-full max-w-[1360px] flex-col gap-8 px-4 pb-12 pt-6 md:px-6", className)}>
+      <main className={cn("mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-6 pb-12 pt-8", className)}>
         {children}
       </main>
     </div>

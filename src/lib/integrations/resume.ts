@@ -16,12 +16,20 @@ export function validateResume(file: File) {
   }
 }
 
-export async function extractResumeText(file: File) {
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+/**
+ * Read the file into a Buffer once - the Web API File can have its
+ * arrayBuffer consumed, so we do this early and pass the buffer around.
+ */
+export async function readFileBuffer(file: File): Promise<Buffer> {
+  return Buffer.from(await file.arrayBuffer());
+}
 
-  if (file.type === "application/pdf") {
-    const { default: pdfParse } = await import("pdf-parse");
+export async function extractResumeText(buffer: Buffer, mimeType: string): Promise<string> {
+  if (mimeType === "application/pdf") {
+    // Import from lib/pdf-parse directly to avoid the debug code in
+    // pdf-parse/index.js that tries to read ./test/data/05-versions-space.pdf
+    const mod = await import("pdf-parse/lib/pdf-parse.js");
+    const pdfParse = mod.default ?? mod;
     const parsed = await pdfParse(buffer);
     return parsed.text;
   }

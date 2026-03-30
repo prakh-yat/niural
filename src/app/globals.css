@@ -1,26 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f6fb;
-  --foreground: #171926;
-  --ink: #171926;
-  --ink-soft: #575a6b;
-  --ink-muted: #767a91;
+  --background: #ffffff;
+  --foreground: #111827;
+  --ink: #111827;
+  --ink-soft: #4b5563;
+  --ink-muted: #9ca3af;
   --panel: #ffffff;
-  --panel-strong: #f2f1f7;
-  --panel-tint: #f7f8ff;
-  --accent: #6467f2;
-  --accent-strong: #5151d0;
-  --accent-soft: #e8ebff;
-  --line: rgba(19, 25, 38, 0.1);
-  --line-strong: rgba(19, 25, 38, 0.18);
-  --success: #14855b;
-  --success-soft: #dbf6eb;
-  --warning: #b77318;
-  --warning-soft: #fff4d8;
-  --danger: #b33a47;
-  --danger-soft: #ffe6ea;
-  --shadow-lg: 0 28px 64px rgba(30, 44, 223, 0.09);
+  --panel-strong: #f9fafb;
+  --panel-tint: #f3f4f6;
+  --accent: #7c3aed;
+  --accent-strong: #6d28d9;
+  --accent-soft: #f5f3ff;
+  --line: #e5e7eb;
+  --line-strong: #d1d5db;
+  --success: #059669;
+  --success-soft: #d1fae5;
+  --warning: #d97706;
+  --warning-soft: #fef3c7;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
 }
 
 @theme inline {
@@ -45,7 +44,6 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --font-sans: var(--font-body);
-  --font-display: var(--font-display);
 }
 
 * {
@@ -55,7 +53,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), system-ui, -apple-system, sans-serif;
 }
 
 a {
@@ -64,69 +62,13 @@ a {
 }
 
 ::selection {
-  background: rgba(100, 103, 242, 0.16);
-}
-
-.surface-grid {
-  background-image: linear-gradient(rgba(100, 103, 242, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(100, 103, 242, 0.04) 1px, transparent 1px);
-  background-size: 36px 36px;
-}
-
-.radial-accent {
-  background:
-    radial-gradient(circle at top left, rgba(100, 103, 242, 0.18), transparent 42%),
-    radial-gradient(circle at bottom right, rgba(225, 81, 255, 0.1), transparent 28%);
-}
-
-.glass-panel {
-  background: rgba(255, 255, 255, 0.84);
-  border: 1px solid rgba(19, 25, 38, 0.08);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(14px);
-}
-
-.section-title {
-  font-family: var(--font-display), Arial, Helvetica, sans-serif;
-  font-size: clamp(2.25rem, 5vw, 4.5rem);
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  border: 1px solid rgba(100, 103, 242, 0.14);
-  background: rgba(255, 255, 255, 0.78);
-  color: var(--accent-strong);
-  border-radius: 999px;
-  padding: 0.45rem 0.8rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-.eyebrow::before {
-  content: "";
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--accent), #e151ff);
-}
-
-.table-shell {
-  border-radius: 1.5rem;
-  border: 1px solid rgba(19, 25, 38, 0.08);
-  background: rgba(255, 255, 255, 0.92);
-  overflow: hidden;
-  box-shadow: 0 18px 42px rgba(19, 25, 38, 0.06);
+  background: rgba(124, 58, 237, 0.15);
 }
 
 .dense-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-muted);
 }

@@ -2,8 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 import { env, envFlags } from "@/lib/env";
+import type { PortalSessionScope } from "@/lib/supabase/cookies";
+import { getSupabaseCookieName } from "@/lib/supabase/cookies";
 
-export async function createSupabaseServerClient() {
+export async function createSupabaseServerClient(scope?: PortalSessionScope) {
   if (!envFlags.hasSupabase) {
     return null;
   }
@@ -14,6 +16,11 @@ export async function createSupabaseServerClient() {
     env.NEXT_PUBLIC_SUPABASE_URL!,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: scope
+        ? {
+            name: getSupabaseCookieName(scope),
+          }
+        : undefined,
       cookies: {
         getAll() {
           return cookieStore.getAll();

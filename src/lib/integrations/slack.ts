@@ -5,7 +5,7 @@ import { WebClient } from "@slack/web-api";
 import { env, envFlags } from "@/lib/env";
 
 function getSlackClient() {
-  if (!envFlags.hasSlack) {
+  if (!envFlags.hasSlackBot) {
     return null;
   }
 
@@ -13,8 +13,13 @@ function getSlackClient() {
 }
 
 export async function inviteToSlack(email: string, channels: string[] = []) {
-  if (!envFlags.hasSlack) {
-    return { mode: "preview" as const, inviteId: `mock-invite-${email}` };
+  if (!envFlags.hasSlackAdminInvite) {
+    return {
+      mode: "preview" as const,
+      ok: false,
+      inviteId: `mock-invite-${email}`,
+      errorMessage: "Slack admin invite API is not configured for this workspace.",
+    };
   }
 
   const response = await fetch("https://slack.com/api/admin.users.invite", {
@@ -30,8 +35,21 @@ export async function inviteToSlack(email: string, channels: string[] = []) {
   });
 
   const payload = await response.json();
+  if (!response.ok || !payload.ok) {
+    return {
+      mode: "live" as const,
+      ok: false,
+      inviteId: `slack-${email}`,
+      payload,
+      errorMessage:
+        (typeof payload.error === "string" && payload.error) ||
+        `Slack invite failed with status ${response.status}.`,
+    };
+  }
+
   return {
     mode: "live" as const,
+    ok: true,
     inviteId: (payload.invite_id as string | undefined) ?? `slack-${email}`,
     payload,
   };
@@ -53,12 +71,29 @@ export async function sendWelcomeDm(userId: string, text: string) {
 
 export async function notifyHrChannel(text: string) {
   const client = getSlackClient();
-  if (!client || !env.SLACK_HR_CHANNEL_ID) {
+  if (!client) {
+    return { mode: "preview" as const };
+  }
+
+  if (env.SLACK_HR_CHANNEL_ID) {
+    await client.chat.postMessage({
+      channel: env.SLACK_HR_CHANNEL_ID,
+      text,
+    });
+
+    return { mode: "live" as const };
+  }
+
+  const hrUser = await client.users.lookupByEmail({
+    email: env.SLACK_HR_EMAIL,
+  });
+  const hrUserId = hrUser.user?.id;
+  if (!hrUserId) {
     return { mode: "preview" as const };
   }
 
   await client.chat.postMessage({
-    channel: env.SLACK_HR_CHANNEL_ID,
+    channel: hrUserId,
     text,
   });
 
@@ -70,7 +105,7 @@ export function verifySlackSignature(input: {
   signature: string | null;
   timestamp: string | null;
 }) {
-  if (!envFlags.hasSlack || !input.signature || !input.timestamp) {
+  if (!env.SLACK_SIGNING_SECRET || !input.signature || !input.timestamp) {
     return false;
   }
 

@@ -8,6 +8,7 @@ export const demoJobs: JobRecord[] = [
   {
     id: "job-ai-product-operator",
     slug: "ai-product-operator",
+    postedAt: addDays(now, -1).toISOString(),
     title: "AI Product Operator",
     team: "Product Operations",
     location: "New York, NY",
@@ -40,6 +41,7 @@ export const demoJobs: JobRecord[] = [
   {
     id: "job-payroll-automation-lead",
     slug: "global-payroll-automation-lead",
+    postedAt: addDays(now, -3).toISOString(),
     title: "Global Payroll Automation Lead",
     team: "Global Payroll",
     location: "Remote (US)",
@@ -72,6 +74,7 @@ export const demoJobs: JobRecord[] = [
   {
     id: "job-platform-engineer",
     slug: "full-stack-platform-engineer",
+    postedAt: addDays(now, -6).toISOString(),
     title: "Full-Stack Platform Engineer",
     team: "Platform",
     location: "San Francisco, CA",
@@ -115,6 +118,13 @@ export const demoCandidates: CandidateRecord[] = [
     score: 91,
     submittedAt: addDays(now, -9).toISOString(),
     location: "Brooklyn, NY",
+    profile: {
+      headline: "Senior Product Operator",
+      preferredLocation: "Remote or New York",
+      skills: ["AI workflows", "recruiting ops", "Notion", "systems design"],
+      desiredSalaryMin: 175000,
+      desiredSalaryMax: 215000,
+    },
     fitSummary:
       "Maya consistently ships internal AI tooling that compresses recruiting and support workflows. Her background maps tightly to the operator scope of this role.",
     strengths: [
@@ -189,6 +199,13 @@ export const demoCandidates: CandidateRecord[] = [
     score: 84,
     submittedAt: addDays(now, -4).toISOString(),
     location: "Austin, TX",
+    profile: {
+      headline: "Global Payroll Automation Lead",
+      preferredLocation: "Remote",
+      skills: ["payroll systems", "controls", "documentation"],
+      desiredSalaryMin: 145000,
+      desiredSalaryMax: 185000,
+    },
     fitSummary:
       "Evelyn has strong payroll and controls experience, with enough systems fluency to work well in an automation-heavy role.",
     strengths: ["Deep payroll domain expertise.", "Strong cross-border operations background."],
@@ -237,6 +254,13 @@ export const demoCandidates: CandidateRecord[] = [
     score: 72,
     submittedAt: addDays(now, -2).toISOString(),
     location: "Chicago, IL",
+    profile: {
+      headline: "Platform Engineer",
+      preferredLocation: "Chicago or remote",
+      skills: ["TypeScript", "platform engineering", "Postgres"],
+      desiredSalaryMin: 165000,
+      desiredSalaryMax: 210000,
+    },
     fitSummary:
       "Omar is strong on engineering fundamentals, but the brief is thinner on internal tools and workflow-heavy product surfaces.",
     strengths: ["Strong backend depth.", "Good platform instincts."],

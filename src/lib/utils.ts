@@ -21,6 +21,10 @@ export function formatLongDateTime(value: Date | string) {
   return format(new Date(value), "MMM d, yyyy 'at' h:mm a");
 }
 
+export function formatInterviewSlotWindow(start: Date | string, end: Date | string) {
+  return `${format(new Date(start), "EEE, MMM d")} · ${format(new Date(start), "h:mm a")} - ${format(new Date(end), "h:mm a")}`;
+}
+
 export function initials(name: string) {
   return name
     .split(" ")
@@ -28,4 +32,18 @@ export function initials(name: string) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+export function formatOfferStatusLabel(
+  status: string,
+  audience: "admin" | "candidate" = "admin",
+) {
+  if (audience === "candidate" && status === "sent") {
+    return "Received";
+  }
+
+  return status
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }

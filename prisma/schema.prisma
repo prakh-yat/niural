@@ -157,7 +157,7 @@ model ScreeningResult {
   education        Json?
   pastEmployers    String[]
   achievements     String[]
-  thresholdUsed    Int         @default(75)
+  thresholdUsed    Int         @default(50)
   autoShortlisted  Boolean     @default(false)
   sourceModel      String?
   createdAt        DateTime    @default(now())

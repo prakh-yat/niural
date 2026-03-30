@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Inter_Tight } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const display = Inter_Tight({
-  variable: "--font-display",
-  subsets: ["latin"],
-});
-
-const body = Inter({
+const inter = Inter({
   variable: "--font-body",
   subsets: ["latin"],
 });
@@ -24,11 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${display.variable} ${body.variable} h-full bg-canvas antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-canvas text-ink">{children}</body>
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-[#fafafa] text-gray-900">{children}</body>
     </html>
   );
 }

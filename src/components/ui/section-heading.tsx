@@ -12,14 +12,14 @@ export function SectionHeading({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col gap-4", className)}>
-      {eyebrow ? <span className="eyebrow">{eyebrow}</span> : null}
-      <div className="flex flex-col gap-3">
-        <h2 className="font-display text-[2rem] leading-[0.96] tracking-[-0.05em] text-ink md:text-[3.3rem]">
-          {title}
-        </h2>
-        {body ? <p className="max-w-2xl text-base leading-7 text-ink-soft md:text-lg">{body}</p> : null}
-      </div>
+    <div className={cn("flex flex-col gap-3", className)}>
+      {eyebrow ? (
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          {eyebrow}
+        </span>
+      ) : null}
+      <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+      {body ? <p className="max-w-2xl text-sm leading-relaxed text-gray-500">{body}</p> : null}
     </div>
   );
 }

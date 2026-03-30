@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { PageFrame } from "@/components/shell/page-frame";
 import { Panel } from "@/components/ui/panel";
 import { StatusPill } from "@/components/ui/status-pill";
 import { getViewer } from "@/lib/server/auth";
@@ -13,44 +12,46 @@ export default async function CandidatePortalPage() {
   const candidate = candidates.find((entry) => entry.email === viewer?.email) ?? candidates[0];
 
   return (
-    <PageFrame>
-      <section className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr]">
-        <Panel className="flex flex-col gap-6">
+    <div className="grid gap-6 xl:grid-cols-[1fr_1.3fr]">
+      <div className="grid gap-6">
+        <Panel className="flex flex-col gap-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="dense-label">Candidate portal</p>
-              <h1 className="mt-2 font-display text-[2.3rem] tracking-[-0.05em] text-ink">
+              <h1 className="mt-2 text-2xl font-semibold text-gray-900">
                 Welcome, {candidate.fullName.split(" ")[0]}
               </h1>
             </div>
             <StatusPill label={candidate.stage.replaceAll("_", " ")} tone="scheduled" />
           </div>
+
           {viewer?.isPreview ? (
-            <div className="rounded-2xl border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning">
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-700">
               Preview mode is active because Supabase credentials are not configured yet.
             </div>
           ) : null}
+
           <div className="grid gap-4">
-            <div className="rounded-[1.4rem] bg-panel-strong p-4">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <p className="dense-label">Applied role</p>
-              <p className="mt-2 text-base font-semibold text-ink">{candidate.jobTitle}</p>
+              <p className="mt-2 text-sm font-semibold text-gray-900">{candidate.jobTitle}</p>
             </div>
-            <div className="rounded-[1.4rem] bg-panel-strong p-4">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <p className="dense-label">Interview status</p>
-              <p className="mt-2 text-base font-semibold text-ink">{candidate.interview.status}</p>
-              <p className="mt-1 text-sm text-ink-soft">
+              <p className="mt-2 text-sm font-semibold text-gray-900">{candidate.interview.status}</p>
+              <p className="mt-1 text-sm text-gray-500">
                 {candidate.interview.confirmedAt
                   ? formatLongDateTime(candidate.interview.confirmedAt)
                   : "Scheduling is still underway."}
               </p>
             </div>
-            <div className="rounded-[1.4rem] bg-panel-strong p-4">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <p className="dense-label">Offer status</p>
-              <p className="mt-2 text-base font-semibold text-ink">
+              <p className="mt-2 text-sm font-semibold text-gray-900">
                 {candidate.offer?.status ?? "Not started"}
               </p>
               {candidate.offer ? (
-                <p className="mt-1 text-sm text-ink-soft">
+                <p className="mt-1 text-sm text-gray-500">
                   {formatCurrency(candidate.offer.baseSalary)} · starts{" "}
                   {formatShortDate(candidate.offer.startDate)}
                 </p>
@@ -59,80 +60,98 @@ export default async function CandidatePortalPage() {
           </div>
         </Panel>
 
-        <div className="grid gap-5">
-          <Panel className="grid gap-5 md:grid-cols-[0.95fr_1.05fr]">
-            <div className="flex flex-col gap-4">
-              <div>
-                <p className="dense-label">Role fit</p>
-                <p className="mt-2 font-display text-5xl tracking-[-0.06em] text-accent">
-                  {candidate.score}
-                </p>
-              </div>
-              <p className="text-sm leading-8 text-ink-soft">{candidate.fitSummary}</p>
+        <Panel className="flex flex-col gap-4">
+          <p className="dense-label">AI fit summary</p>
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-4xl font-semibold text-indigo-600">
+                {candidate.score}
+              </p>
+              <p className="mt-2 text-sm text-gray-500">Fit score against the applied role</p>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <p className="dense-label">Strengths</p>
-                <ul className="mt-3 space-y-2 text-sm leading-7 text-ink-soft">
-                  {candidate.strengths.map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="dense-label">Gaps</p>
-                <ul className="mt-3 space-y-2 text-sm leading-7 text-ink-soft">
-                  {candidate.gaps.map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
-              </div>
+            <StatusPill label={candidate.stage.replaceAll("_", " ")} tone="scheduled" />
+          </div>
+          <p className="text-sm leading-relaxed text-gray-500">{candidate.fitSummary}</p>
+        </Panel>
+      </div>
+
+      <div className="grid gap-5">
+        <Panel className="grid gap-5 md:grid-cols-[1fr_1fr]">
+          <div className="flex flex-col gap-4">
+            <div>
+              <p className="dense-label">AI screening results</p>
+              <h2 className="mt-2 text-xl font-semibold text-gray-900">
+                Your profile
+              </h2>
             </div>
+            <p className="text-sm leading-relaxed text-gray-500">
+              Strengths and areas for growth identified from your application.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <p className="dense-label">Strengths</p>
+              <ul className="mt-3 space-y-2 text-sm leading-relaxed text-gray-500">
+                {candidate.strengths.map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="dense-label">Gaps</p>
+              <ul className="mt-3 space-y-2 text-sm leading-relaxed text-gray-500">
+                {candidate.gaps.map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </Panel>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <Panel className="flex flex-col gap-4">
+            <p className="dense-label">Interview actions</p>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="text-sm font-semibold text-gray-900">Confirmed interview</p>
+              <p className="mt-1 text-sm text-gray-500">
+                {candidate.interview.confirmedAt
+                  ? formatLongDateTime(candidate.interview.confirmedAt)
+                  : "Choose a slot from the proposed options."}
+              </p>
+            </div>
+            <Link
+              href={`/interviews/${candidate.interview.id}`}
+              prefetch={false}
+              className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            >
+              Review interview details
+            </Link>
           </Panel>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Panel className="flex flex-col gap-4">
-              <p className="dense-label">Interview actions</p>
-              <div className="rounded-[1.4rem] bg-panel-strong p-4">
-                <p className="text-sm font-semibold text-ink">Confirmed interview</p>
-                <p className="mt-1 text-sm text-ink-soft">
-                  {candidate.interview.confirmedAt
-                    ? formatLongDateTime(candidate.interview.confirmedAt)
-                    : "Choose a slot from the proposed options."}
-                </p>
-              </div>
+          <Panel className="flex flex-col gap-4">
+            <p className="dense-label">Offer actions</p>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="text-sm font-semibold text-gray-900">
+                {candidate.offer ? "Offer ready for signature" : "Offer not yet available"}
+              </p>
+              <p className="mt-1 text-sm text-gray-500">
+                {candidate.offer
+                  ? `${formatCurrency(candidate.offer.baseSalary)} · ${candidate.offer.equity}`
+                  : "After the interview debrief, this portal becomes the signing handoff."}
+              </p>
+            </div>
+            {candidate.offer ? (
               <Link
-                href={`/candidate/interviews/${candidate.interview.id}`}
-                className="inline-flex items-center justify-center rounded-full bg-accent px-4 py-3 text-sm font-semibold text-white"
+                href={`/offers/${candidate.offer.id}`}
+                prefetch={false}
+                className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
-                Review interview details
+                Open offer package
               </Link>
-            </Panel>
-
-            <Panel className="flex flex-col gap-4">
-              <p className="dense-label">Offer actions</p>
-              <div className="rounded-[1.4rem] bg-panel-strong p-4">
-                <p className="text-sm font-semibold text-ink">
-                  {candidate.offer ? "Offer ready for signature" : "Offer not yet available"}
-                </p>
-                <p className="mt-1 text-sm text-ink-soft">
-                  {candidate.offer
-                    ? `${formatCurrency(candidate.offer.baseSalary)} · ${candidate.offer.equity}`
-                    : "After the interview debrief, this portal becomes the signing handoff."}
-                </p>
-              </div>
-              {candidate.offer ? (
-                <Link
-                  href={`/candidate/offers/${candidate.offer.id}`}
-                  className="inline-flex items-center justify-center rounded-full border border-line bg-white px-4 py-3 text-sm font-semibold text-ink"
-                >
-                  Open offer package
-                </Link>
-              ) : null}
-            </Panel>
-          </div>
+            ) : null}
+          </Panel>
         </div>
-      </section>
-    </PageFrame>
+      </div>
+    </div>
   );
 }

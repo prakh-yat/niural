@@ -1,138 +1,179 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PageFrame } from "@/components/shell/page-frame";
-import { Panel } from "@/components/ui/panel";
 import { StatusPill } from "@/components/ui/status-pill";
-import { getJobById } from "@/lib/server/data";
+import { getJobById, listJobs } from "@/lib/server/data";
+
+function formatJobStatus(status: "open" | "paused" | "closed") {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
 
 export default async function ApplyPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ jobId: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { jobId } = await params;
-  const job = await getJobById(jobId);
+  const { error } = await searchParams;
+  const [job, jobs] = await Promise.all([getJobById(jobId), listJobs()]);
 
   if (!job) {
     notFound();
   }
 
+  const selectableJobs = jobs.filter((entry) => entry.status === "open");
+  const hasOpenRoles = selectableJobs.length > 0;
+  const selectedJobId =
+    job.status === "open" ? job.id : hasOpenRoles ? selectableJobs[0].id : "";
+  const statusMessage =
+    job.status === "paused"
+      ? "This role is temporarily paused. You can choose another open role below."
+      : "This role is closed. You can still apply to another open role from this page.";
+
   return (
     <PageFrame>
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <Panel className="flex flex-col gap-6 bg-gradient-to-b from-white to-panel-tint">
+        <div className="flex flex-col gap-6 rounded-lg border border-gray-200 bg-white p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="dense-label">Applying for</p>
-              <h1 className="mt-2 font-display text-[2.3rem] tracking-[-0.05em] text-ink">
+              <h1 className="mt-2 text-2xl font-semibold text-gray-900">
                 {job.title}
               </h1>
             </div>
-            <StatusPill label={job.remoteLabel} tone="open" />
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <StatusPill label={formatJobStatus(job.status)} tone={job.status} />
+              <StatusPill label={job.remoteLabel} tone="open" />
+            </div>
           </div>
-          <p className="text-sm leading-8 text-ink-soft">{job.overview}</p>
-          <div className="grid gap-3">
-            {[
-              "Duplicate applications are blocked by email + role.",
-              "Only PDF and DOCX resumes are accepted.",
-              "Successful submit triggers confirmation email and AI screening.",
-              "If the role is paused before submit completes, the request is rejected safely.",
-            ].map((item) => (
-              <div key={item} className="rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink-soft">
-                {item}
+          <p className="text-sm leading-6 text-gray-500">{job.overview}</p>
+          {job.status !== "open" ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {statusMessage}
+            </div>
+          ) : null}
+          <div className="grid gap-3 text-sm text-gray-500">
+            <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">Accepted formats: PDF, DOCX</div>
+            <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">You will receive a confirmation email after submission</div>
+          </div>
+        </div>
+
+        {hasOpenRoles ? (
+          <form
+            action="/api/applications"
+            method="post"
+            encType="multipart/form-data"
+            className="rounded-lg border border-gray-200 bg-white p-6 md:p-8"
+          >
+            {error ? (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
               </div>
-            ))}
-          </div>
-        </Panel>
+            ) : null}
+            <div className="flex flex-col gap-2">
+              <p className="dense-label">Candidate application</p>
+              <h2 className="text-xl font-semibold text-gray-900">Apply</h2>
+              <p className="text-sm leading-6 text-gray-500">
+                Fill out your details and upload your resume to get started.
+              </p>
+            </div>
 
-        <form
-          action="/api/applications"
-          method="post"
-          encType="multipart/form-data"
-          className="rounded-[2rem] border border-line bg-white p-6 shadow-[0_20px_46px_rgba(19,25,38,0.06)] md:p-8"
-        >
-          <input type="hidden" name="jobId" value={job.id} />
-          <div className="flex flex-col gap-2">
-            <p className="dense-label">Candidate application</p>
-            <h2 className="font-display text-[2rem] tracking-[-0.05em] text-ink">Structured application</h2>
-            <p className="text-sm leading-7 text-ink-soft">
-              This form feeds the entire pipeline: screening, research, scheduling, and onboarding.
-            </p>
-          </div>
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-900">
+                Full name
+                <input
+                  type="text"
+                  name="fullName"
+                  required
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-600"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-900">
+                Email
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-600"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-900">
+                LinkedIn URL
+                <input
+                  type="url"
+                  name="linkedInUrl"
+                  required
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-600"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-900">
+                Portfolio / GitHub
+                <input
+                  type="url"
+                  name="portfolioUrl"
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-600"
+                />
+              </label>
+            </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-              Full name
-              <input
-                type="text"
-                name="fullName"
-                required
-                className="rounded-2xl border border-line bg-panel px-4 py-3 text-ink outline-none transition focus:border-accent"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-              Email
-              <input
-                type="email"
-                name="email"
-                required
-                className="rounded-2xl border border-line bg-panel px-4 py-3 text-ink outline-none transition focus:border-accent"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-              LinkedIn URL
-              <input
-                type="url"
-                name="linkedInUrl"
-                required
-                className="rounded-2xl border border-line bg-panel px-4 py-3 text-ink outline-none transition focus:border-accent"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-              Portfolio / GitHub
-              <input
-                type="url"
-                name="portfolioUrl"
-                className="rounded-2xl border border-line bg-panel px-4 py-3 text-ink outline-none transition focus:border-accent"
-              />
-            </label>
-          </div>
+            <div className="mt-4 grid gap-4">
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-900">
+                Role selection
+                <select
+                  name="jobId"
+                  defaultValue={selectedJobId}
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-600"
+                >
+                  {selectableJobs.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-gray-900">
+                Resume upload
+                <input
+                  type="file"
+                  name="resume"
+                  accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  required
+                  className="rounded-lg border border-dashed border-gray-400 bg-white px-3 py-3 text-sm text-gray-500"
+                />
+              </label>
+            </div>
 
-          <div className="mt-4 grid gap-4">
-            <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-              Role selection
-              <select
-                name="jobIdSelect"
-                defaultValue={job.id}
-                className="rounded-2xl border border-line bg-panel px-4 py-3 text-ink outline-none transition focus:border-accent"
+            <div className="mt-8 flex items-center justify-between gap-4 border-t border-gray-200 pt-6">
+              <p className="max-w-md text-sm leading-6 text-gray-500">
+                Your application will be reviewed by our AI screening system.
+              </p>
+              <button
+                type="submit"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
-                <option value={job.id}>{job.title}</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-              Resume upload
-              <input
-                type="file"
-                name="resume"
-                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                required
-                className="rounded-2xl border border-dashed border-line-strong bg-panel px-4 py-4 text-sm text-ink-soft"
-              />
-            </label>
+                Submit application
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="rounded-lg border border-gray-200 bg-white p-6 md:p-8">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800">
+              There are no open roles available right now. Please check back later or browse the
+              live job board for updates.
+            </div>
+            <div className="mt-6">
+              <Link
+                href="/careers"
+                className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              >
+                Browse job board
+              </Link>
+            </div>
           </div>
-
-          <div className="mt-8 flex items-center justify-between gap-4 border-t border-line pt-6">
-            <p className="max-w-md text-sm leading-7 text-ink-soft">
-              Submission creates a candidate account, sends a confirmation email, and enqueues AI screening and research.
-            </p>
-            <button
-              type="submit"
-              className="rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:bg-accent-strong"
-            >
-              Submit application
-            </button>
-          </div>
-        </form>
+        )}
       </section>
     </PageFrame>
   );
